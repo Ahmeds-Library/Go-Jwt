@@ -16,19 +16,22 @@ func login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	if u.Username == "Ahmed" && u.Password == "Jwt" {
+
+	var dbPassword string
+	err := database.Db.QueryRow("SELECT password FROM users WHERE username = $1", u.Username).Scan(&dbPassword)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+        return
+    }
+
+	if  u.Password == dbPassword {
 		tokenstring, err := createToken(u.Username)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to create token"})
 			return
 		}
 
-    var dbPassword string
-	err = database.Db.QueryRow("SELECT password FROM users WHERE username = $1", u.Username).Scan(&dbPassword)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
-        return
-    }
+   
 
     if dbPassword != u.Password {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
@@ -83,7 +86,7 @@ func signup(c *gin.Context) {
 
 	_, err := database.Db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", u.Username, u.Password)
     if err != nil {
-		fmt.Println(err, "Line 86")
+		fmt.Println	(err, "Line 86")
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Username already exists or error in DB"})
         return
     }
