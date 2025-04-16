@@ -3,35 +3,28 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
-	"strconv"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var Db *sql.DB
 
 func ConnectDatabase() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("Error loading .env file")
+	}
 
-	err := godotenv.Load()
+	envdata := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
+		os.Getenv("HOST"), os.Getenv("PORT"), os.Getenv("USER"), os.Getenv("DB_NAME"), os.Getenv("PASSWORD"))
+
+	var err error
+	Db, err = sql.Open("postgres", envdata)
 	if err != nil {
-		fmt.Println("Error is occurred  on .env file please check")
+		log.Fatalf("Database connection error: %v", err)
 	}
 
-	host := os.Getenv("HOST")
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	user := os.Getenv("USER")
-	dbname := os.Getenv("DB_NAME")
-	pass := os.Getenv("PASSWORD")
-
-	psqlSetup := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-		host, port, user, dbname, pass)
-	db, errSql := sql.Open("postgres", psqlSetup)
-	if errSql != nil {
-		fmt.Println("There is an error while connecting to the database ", err)
-		panic(err)
-	} else {
-		Db = db
-		fmt.Println("Successfully connected to database!")
-	}
+	fmt.Println("Successfully connected to database!")
 }

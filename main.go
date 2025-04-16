@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/Ahmeds-Library/Go-Jwt/database"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -15,8 +16,9 @@ type User struct {
 var secretKey = []byte("secret-key")
 
 func main() {
-
-	r := gin.Default()
+	database.ConnectDatabase()
+	r := gin.Default()		
+	r.POST("/signup", signup)
 	r.POST("/login", login)
 	r.POST("/upload", upload)
 	r.Run(":8000")
