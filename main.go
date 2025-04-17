@@ -1,40 +1,17 @@
 package main
 
 import (
-	"time"
-
 	"github.com/Ahmeds-Library/Go-Jwt/database"
+	"github.com/Ahmeds-Library/Go-Jwt/middleware"
+	"github.com/Ahmeds-Library/Go-Jwt/route_func"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
-
-type User struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-var secretKey = []byte("secret-key")
 
 func main() {
 	database.ConnectDatabase()
-	r := gin.Default()		
-	r.POST("/signup", signup)
-	r.POST("/login", login)
-	r.POST("/upload", upload)
+	r := gin.Default()
+	r.POST("/signup", route_func.Signup)
+	r.POST("/login", route_func.Login)
+	r.POST("/upload", middleware.AuthMiddleware(), route_func.Upload)
 	r.Run(":8000")
-}
-
-func createToken(username string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"username": username,
-			"exp":      time.Now().Add(time.Minute * 30).Unix(),
-		})
-
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
 }
